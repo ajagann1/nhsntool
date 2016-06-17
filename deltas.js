@@ -10,6 +10,8 @@ var argv = require('yargs')
   .demand('d')
   .alias('r', 'rFilePath')
   .demand('r')
+  .alias('h', 'headers')
+  .alias('l', 'delimiter')
   .argv;
 
 var parseFile = function(file){
@@ -21,7 +23,11 @@ var parseFile = function(file){
     var str = file.substring(0, cutoff);
     str = str.replace('\r', '');
 
-    var arr = str.split('\t');
+    if(str.indexOf(delimiter) != -1) {
+      var arr = str.split(delimiter);
+    }else{
+      throw "Chosen delimiter does not work for this file."
+    }
     var obj = {
       delimited: arr,
       original: str
@@ -39,7 +45,7 @@ var searchDescript = function(conceptCode){
   var str = '';
   var found = false;
   for(var i in descript){
-    if(i === '0'){
+    if(header && i === '0'){
       continue;
     }
     if(conceptCode === descript[i].delimited[4]){
@@ -57,7 +63,7 @@ var searchRelation = function(conceptCode){
   var str = '';
   var found = false;
   for(var i in relation){
-    if(i === '0'){
+    if(header && i === '0'){
       continue;
     }
     if(conceptCode === relation[i].delimited[4] || conceptCode === relation[i].delimited[5]){
@@ -71,15 +77,43 @@ var searchRelation = function(conceptCode){
   return str;
 };
 
-var concepts = parseFile(fs.readFileSync(argv.cFilePath, 'utf-8'));
-var descript = parseFile(fs.readFileSync(argv.dFilePath, 'utf-8'));
-var relation = parseFile(fs.readFileSync(argv.rFilePath, 'utf-8'));
+var parseDelimiter = function(delimit){
+  if(delimit.indexOf('\\') != -1 && delimit.length === 2){
+    if(delimit[1] === 't') return '\t';
+    if(delimit[1] === 'n') return '\n';
+  }
+  if(delimit === ' ') return delimit;
+  else throw 'Unsupported delimiter choice.';
+};
+
+var parseHeader = function(header){
+  if(argv.header.toLowerCase() === 'y'){
+    return true;
+  } else if(argv.header.toLowerCase() === 'n'){
+    return false;
+  } else{
+    throw 'Header input must be y or n';
+  }
+};
+
+try {
+  var header = parseHeader(argv.header);
+
+  var delimiter = argv.delimiter ? parseDelimiter(argv.delimiter) : '\t';
+
+  var concepts = parseFile(fs.readFileSync(argv.cFilePath, 'utf-8'));
+  var descript = parseFile(fs.readFileSync(argv.dFilePath, 'utf-8'));
+  var relation = parseFile(fs.readFileSync(argv.rFilePath, 'utf-8'));
+}catch(err){
+  console.log(err);
+  return;
+}
 
 var str = '';
 var spacer = '--------------------------------------\n';
 str += spacer;
 for(var i in concepts){
-  if(i === '0'){
+  if(header && i === '0'){
     continue;
   }
   str = str + 'Concept:\n';
@@ -93,3 +127,4 @@ for(var i in concepts){
 }
 
 console.log(str);
+return;
