@@ -29,9 +29,24 @@ describe('deltas', function(){
         var conceptCode = parsedConcepts[1].delimited[0];
         var str = deltas.searchDescript(conceptCode, parsedDescripts, false);
         assert(str, "Couldn't find the specified concept code");
-        assert(str.match(/\n/g).length === 2, "Didn't find the appropriate amount of descriptions in the test file")
+        assert(str.match(/\n/g).length === 2, "Didn't find the appropriate amount of descriptions in the test file");
         done();
       }catch(err){
+        done(err);
+      }
+    });
+  });
+  describe('#searchRelation', function(){
+    it('should return any detected changes to the coded concept entry currently being examined', function(done) {
+      try {
+        var parsedConcept = deltas.parseFile(fs.readFileSync('test/data/conceptRelTest.txt', 'utf-8'), '\t');
+        var parsedRelation = deltas.parseFile(fs.readFileSync('test/data/relTest.txt', 'utf-8'), '\t');
+        var conceptCode = parsedConcept[0].delimited[0];
+        var str = deltas.searchRelation(conceptCode, parsedRelation, false);
+        assert(str, "Couldn't find the specified concept code");
+        assert(str.match(/\n/g).length === 3, "Didn't find the appropriate amount of relations in the test file");
+        done();
+      } catch (err) {
         done(err);
       }
     });
