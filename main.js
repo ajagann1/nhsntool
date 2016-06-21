@@ -25,9 +25,22 @@ var main = function() {
     var delimiter = argv.delimiter ? deltas.parseDelimiter(argv.delimiter) : '\t';
 
     //Made this happen synchronously so that we populate these variables immediately
+    console.log("Parsing files.");
     var concepts = deltas.parseFile(fs.readFileSync(argv.cFilePath, 'utf-8'), delimiter);
     var descript = deltas.parseFile(fs.readFileSync(argv.dFilePath, 'utf-8'), delimiter);
     var relation = deltas.parseFile(fs.readFileSync(argv.rFilePath, 'utf-8'), delimiter);
+    if(!header || argv.i){
+      var indices = deltas.parseIndices(concepts, descript, relation, header, argv.i);
+    }else{
+      indices = {
+        ci: 0,
+        di: 4,
+        ri: {
+          first: 4,
+          second: 5
+        }
+      };
+    }
   } catch (err) {
     console.log(err);
     return;
@@ -44,13 +57,14 @@ var main = function() {
       continue;
     }
 
+    console.log("Generating output.");
     str += '\n\nConcept:\n';
     str += conceptHeader + '\n';
     str += concepts[i].original;
 
     //Generates the output text using some conditionals for new line formatting.
-    var conceptCode = concepts[i].delimited[0];
-    str += deltas.generateOutput(conceptCode, descript, relation, header);
+    var conceptCode = concepts[i].delimited[indices.ci];
+    str += deltas.generateOutput(conceptCode, descript, relation, header, indices);
 
     str += '\n' + spacer;
   }
