@@ -1,0 +1,8 @@
+{
+	"dependencies":{
+		"mocha": "2.2.4",
+		"requirejs": "2.2.0",
+		"yargs": "4.0.0",
+		"xlsx": ""
+	}
+}
