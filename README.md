@@ -27,7 +27,7 @@ node main.js -c "{filepath1}/deltaConcepts.txt" -d "{filepath2}/deltaDescription
 * h - indicate if the delta files do not have a header depicting what each column represents with y/n (case does not matter)
 	* ex: -h n
 
-* i - specify the indices where concept codes are found in each document. If h is set (y), this is required.  This should be 4 integer numbers seperated by only commas.
+* i - specify the columns where concept codes are found in each document. If h is set (y), this is required.  This should be 4 integer numbers seperated by only commas.
 	* ex: -i "1,2,3,4"
 	
 * l - indicate what's being used for spacing in the delta files (currently only supports ' ' for space and t for tab)
