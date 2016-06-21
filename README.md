@@ -1,28 +1,28 @@
-## Dependencies
+# Dependencies
 
 * Nodejs v0.12.7
 
-## Installation
+# Installation
 
-# Start with:
+## Start with:
 
 npm install
 
-# This should install the modules:
+## This should install the modules:
 
 * Mocha
 * requirejs
 * yargs
 
-## Use
+# Use
 
-# Default use
+## Default use
 
 node main.js -c "{filepath1}/deltaConcepts.txt" -d "{filepath2}/deltaDescriptions.txt" -r "{filepath3}/deltaRelationships.txt"
 * Outputs a results.txt file into the main directory of the repository
 
 
-# Optional Flags
+## Optional Flags
 
 * h - indicate if the delta files do not have a header depicting what each column represents with y/n (case does not matter)
 	* ex: -h n
