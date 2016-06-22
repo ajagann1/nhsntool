@@ -14,6 +14,7 @@ npm install
 * requirejs
 * yargs
 * xlsx
+* gruntjs
 
 # Use
 
