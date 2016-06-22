@@ -24,7 +24,10 @@ node main.js -c "{filepath1}/deltaConcepts.txt" -d "{filepath2}/deltaDescription
 
 ## Setting up for global use
 
-npm install -g \n
+npm install -g
+
+## Using globally
+
 nhsntool -c "{filepath1}/deltaConcepts.txt" -d "{filepath2}/deltaDescriptions.txt" -r "{filepath3}/deltaRelationships.txt" -x "{filepath4}/excel.xlsx"
 * Outputs a results.html file into the directory the tool is used from
 
