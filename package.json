@@ -1,14 +1,21 @@
 {
-	"name": "nhsntool",
-	"version": "1.0.0",
-	"bin": {
-		"nhsntool": "./main.js"
-	},
-	"author": "Arvind Jagannathan <arvind.jagannathan@lantanagroup.com>",
-	"dependencies":{
-		"mocha": "2.2.4",
-		"requirejs": "2.2.0",
-		"yargs": "4.0.0",
-		"xlsx": "0.8.0"
-	}
+  "name": "nhsntool",
+  "version": "1.0.0",
+  "bin": {
+    "nhsntool": "./main.js"
+  },
+  "author": "Arvind Jagannathan <arvind.jagannathan@lantanagroup.com>",
+  "dependencies": {
+    "mocha": "2.2.4",
+    "requirejs": "2.2.0",
+    "yargs": "4.0.0",
+    "xlsx": "0.8.0"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.0",
+    "grunt-contrib-jshint": "~0.10.0",
+    "grunt-contrib-nodeunit": "~0.4.1",
+    "grunt-contrib-uglify": "~0.5.0",
+    "grunt-contrib-compress": "1.3.0"
+  }
 }
