@@ -38,7 +38,6 @@ var main = function() {
 
   }
 
-  var conceptHeader = '';
   var excelHeader = '';
   var conceptCodeArray = [];
   var html =
@@ -64,6 +63,9 @@ var main = function() {
             '<h1>Results</h1>' +
           '</div>' +
           '<div data-role="main" class="ui-content">';
+  var str = '';
+  var spacer = '--------------------------------------';
+  str += spacer;
   console.log("Generating output.");
   for(var i in excel){
     if(i === "0") {
@@ -73,8 +75,9 @@ var main = function() {
     if(conceptCodeArray.indexOf(excel[i]) === -1){
       conceptCodeArray.push(excel[i]);
       var output = deltas.generateOutput(excel[i], concepts, descript, relation, indices);
-      if(output){
-        html += '<div data-role="collapsible"><h4>' + excel[i] + '</h4>' + output + '</div>';
+      if(output.html && output.str){
+        html += '<div data-role="collapsible"><h4>' + excel[i] + '</h4>' + output.html + '</div>';
+        str += "\n\nConcept Code: " + excel[i] + output.str + '\n' + spacer;
       }
     }
   }
@@ -82,10 +85,14 @@ var main = function() {
 
   //Outputs the resulting delta text to a specified file
   try {
+    var use = '';
     var force = argv.fo ? true : false;
-    var outputLoc = argv.o ? deltas.parseOutputLoc(argv.o, force) : 'results.html';
-
-    fs.writeFileSync(outputLoc, html);
+    var outputLoc = argv.o || argv.t ? deltas.parseOutputLoc(argv.o, force, argv.t) : 'results.txt';
+    if(argv.t){
+      if(argv.t === 'html') use = html;
+      else if(argv.t === 'txt') use = str;
+    }else use = str;
+    fs.writeFileSync(outputLoc, use);
     console.log('File successfully generated.');
   } catch (err) {
     console.log(err);

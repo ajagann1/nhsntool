@@ -36,46 +36,56 @@ exports.parseFile = function (file, delimiter) {
 
 var searchConcept = function (conceptCode, concepts, ci){
   var html = '';
+  var str = '';
   for (var i in concepts) {
     //If the user indicates there's no header, parse the first line, else, don't.
     if (i === '0') {
-      var conceptHeader = concepts[i].delimited;
+      var conceptHeader = concepts[i];
       continue;
     }
     if(conceptCode === concepts[i].delimited[ci]) {
       html += '<div data-role="collapsible"><h4>Concepts Delta</h4>';
       html += '<table><tbody><tr>';
-      for(var j in conceptHeader) {
-         html += '<th>' + conceptHeader[j] + '</th>';
+      for(var j in conceptHeader.delimited) {
+        html += '<th>' + conceptHeader.delimited[j] + '</th>';
       }
+      str += "\n\nConcept:\n";
+      str += conceptHeader.original + '\n';
       html += '</tr><tr>';
       for(var j in concepts[i].delimited){
         html += '<td>' + concepts[i].delimited[j] + '</td>';
       }
+      str += concepts[i].original + '\n';
       html += '</tr></tbody></table></div>';
       break;
     }
   }
-  return html;
+  return {
+    str: str,
+    html: html
+  };
 };
 
 //Search the description delta file for the currently looked at concept code.
 var searchDescript = function (conceptCode, descript, di) {
   var html = '';
+  var str = '';
   var found = false;
   var descriptHeader = '';
   for (var i in descript) {
     if (i === '0') {
-      descriptHeader = descript[i].delimited;
+      descriptHeader = descript[i];
       continue;
     }
     if (conceptCode === descript[i].delimited[di]) {
       if (!found) {
         html += '<div data-role="collapsible"><h4>Descriptions Delta</h4>';
         html += '<table><tbody><tr>';
-        for(var j in descriptHeader) {
-          html += '<th>' + descriptHeader[j] + '</th>';
+        for(var j in descriptHeader.delimited) {
+          html += '<th>' + descriptHeader.delimited[j] + '</th>';
         }
+        str += '\nDescription:\n';
+        str += descriptHeader.original + '\n';
         html += '</tr>';
         found = true;
       }
@@ -83,30 +93,39 @@ var searchDescript = function (conceptCode, descript, di) {
       for(var j in descript[i].delimited) {
         html += '<td>' + descript[i].delimited[j] + '</td>';
       }
+      str += descript[i].original + '\n';
       html += '</tr>';
     }
   }
-  if(found) html += '</tbody></table></div>';
-  return html;
+  if(found){
+    html += '</tbody></table></div>';
+  } 
+  return{
+    str: str,
+    html: html
+  };
 };
 
 //Search the relationshp delta file for the currently looked at concept code.
 var searchRelation = function (conceptCode, relation, ri) {
   var html = '';
+  var str = '';
   var found = false;
   var relationHeader = '';
   for (var i in relation) {
     if (i === '0') {
-      relationHeader = relation[i].delimited;
+      relationHeader = relation[i];
       continue;
     }
     if (conceptCode === relation[i].delimited[ri.first] || conceptCode === relation[i].delimited[ri.second]) {
       if (!found) {
         html += '<div data-role="collapsible"><h4>Relationships Delta</h4>';
         html += '<table><tbody><tr>';
-        for(var j in relationHeader) {
-          html += '<th>' + relationHeader[j] + '</th>';
+        for(var j in relationHeader.delimited) {
+          html += '<th>' + relationHeader.delimited[j] + '</th>';
         }
+        str += "\nRelationship:\n";
+        str += relationHeader.original + '\n';
         html += '</tr>';
         found = true;
       }
@@ -114,11 +133,17 @@ var searchRelation = function (conceptCode, relation, ri) {
       for(var j in relation[i].delimited) {
         html += '<td>' + relation[i].delimited[j] + '</td>';
       }
+      str += relation[i].original + '\n';
       html += '</tr>';
     }
   }
-  if(found) html += '</tbody></table></div>';
-  return html;
+  if(found) {
+    html += '</tbody></table></div>';
+  }
+  return {
+    str: str,
+    html: html
+  };
 };
 
 //Determine if the input for the delimiter flag is usable. Throw an error if it isn't.
@@ -133,40 +158,68 @@ exports.parseDelimiter = function (delimit) {
 
 exports.generateOutput = function (conceptCode, concepts, descript, relation, indices) {
   var html = '';
+  var str = '';
 
   var searchC = searchConcept(conceptCode, concepts, indices.ci);
-  if(searchC) html += searchC;
+  if (searchC.str && searchC.html) {
+    html += searchC.html;
+    str += searchC.str;
+  }
 
   var searchD = searchDescript(conceptCode, descript, indices.di);
-  if (searchD) html += searchD;
+  if (searchD.str && searchD.html) {
+    html += searchD.html;
+    if(!searchC.str) str += '\n';
+    str += searchD.str;
+  }
 
   var searchR = searchRelation(conceptCode, relation, indices.ri);
-  if (searchR) html += searchR;
-  
-  return html;
+  if (searchR.str && searchR.html) {
+    html += searchR.html;
+    if(!searchD.str) str += '\n';
+    str += searchR.str;
+  }
+
+  return {
+    str: str,
+    html: html
+  };
 };
 
-exports.parseOutputLoc = function (outputLoc, force) {
+exports.parseOutputLoc = function (outputLoc, force, outputType) {
   var filepath;
-  try {
-    if(outputLoc.indexOf('.') === -1) outputLoc += '.html';
-    if(outputLoc.substring(outputLoc.lastIndexOf('.'), outputLoc.length) !== '.html')
-      outputLoc.replace(outputLoc.substring(outputLoc.lastIndexOf('.'), outputLoc.length), '.html');
+  var ext = '';
+  if(outputType){
+    if(outputType === 'txt') ext = 'txt';
+    else if(outputType === 'html') ext = 'html';
+    else throw 'Unsupported extension type.';
+  } else {
+    ext = 'txt';
+  }
+  if(outputLoc) {
+    try {
+      if (outputLoc.indexOf('.') === -1) outputLoc += '.' + ext;
+      if (outputLoc.substring(outputLoc.lastIndexOf('.'), outputLoc.length) !== '.' + ext)
+        outputLoc.replace(outputLoc.substring(outputLoc.lastIndexOf('.'), outputLoc.length), '.' + ext);
 
-    if (outputLoc.indexOf('/') !== -1) filepath = outputLoc.substring(0, outputLoc.lastIndexOf('/'));
-    else if (outputLoc.indexOf('\\') !== -1) filepath = outputLoc.substring(0, outputLoc.lastIndexOf('\\'));
-    else throw "Incorrect path";
+      if (outputLoc.indexOf('/') !== -1) filepath = outputLoc.substring(0, outputLoc.lastIndexOf('/'));
+      else if (outputLoc.indexOf('\\') !== -1) filepath = outputLoc.substring(0, outputLoc.lastIndexOf('\\'));
+      else throw "Incorrect path";
 
-    var stats = fs.statSync(filepath);
-  } catch (err) {
-    if (force) {
-      console.log("Creating a path for file to go to.")
-      fs.mkdirSync(filepath);
-    }else if(err.message === "Incorrect path"){
-      throw "Incorrect path"
-    } else {
-      throw "File path " + filepath + " does not exist.";
+      var stats = fs.statSync(filepath);
+    } catch (err) {
+      if (force) {
+        console.log("Creating a path for file to go to.");
+        fs.mkdirSync(filepath);
+      } else if (err.message === "Incorrect path") {
+        throw "Incorrect path";
+      } else {
+        throw "File path " + filepath + " does not exist.";
+      }
     }
+  }else{
+    if(outputType) outputLoc = 'results.' + ext;
+    else outputLoc = 'results.txt';
   }
   return outputLoc;
 };
