@@ -5,14 +5,10 @@
  */
 
 var argv = require('yargs')
-  .alias('c', 'cFilePath')
   .demand('c')
-  .alias('d', 'dFilePath')
   .demand('d')
-  .alias('r', 'rFilePath')
   .demand('r')
-  .alias('l', 'delimiter')
-  .alias('o', 'outputLoc')
+  .demand('x')
   .argv;
 var fs = require('fs');
 var deltas = require('./deltas');
@@ -22,7 +18,7 @@ var main = function() {
   //Handle all input arguments and parse the input files. Defaulting logic used for the optional flags header and
   //delimiter.
   try {
-    var delimiter = argv.delimiter ? deltas.parseDelimiter(argv.delimiter) : '\t';
+    var delimiter = argv.dl ? deltas.parseDelimiter(argv.l) : '\t';
 
     //Made this happen synchronously so that we populate these variables immediately
     console.log("Parsing files.");
@@ -31,9 +27,9 @@ var main = function() {
     
     var file = xlsx.readFile(argv.x);
     var excel = deltas.excelArray(file, indices.xi);
-    var concepts = deltas.parseFile(fs.readFileSync(argv.cFilePath, 'utf-8'), delimiter);
-    var descript = deltas.parseFile(fs.readFileSync(argv.dFilePath, 'utf-8'), delimiter);
-    var relation = deltas.parseFile(fs.readFileSync(argv.rFilePath, 'utf-8'), delimiter);
+    var concepts = deltas.parseFile(fs.readFileSync(argv.c, 'utf-8'), delimiter);
+    var descript = deltas.parseFile(fs.readFileSync(argv.d, 'utf-8'), delimiter);
+    var relation = deltas.parseFile(fs.readFileSync(argv.r, 'utf-8'), delimiter);
 
   } catch (err) {
 
@@ -87,7 +83,7 @@ var main = function() {
   //Outputs the resulting delta text to a specified file
   try {
     var force = argv.fo ? true : false;
-    var outputLoc = argv.outputLoc ? deltas.parseOutputLoc(argv.outputLoc, force) : 'results.html';
+    var outputLoc = argv.o ? deltas.parseOutputLoc(argv.o, force) : 'results.html';
 
     fs.writeFileSync(outputLoc, html);
     console.log('File successfully generated.');

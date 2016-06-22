@@ -4,10 +4,11 @@
 	"bin": {
 		"nhsntool": "./main.js"
 	},
+	"author": "Arvind Jagannathan <arvind.jagannathan@lantanagroup.com>",
 	"dependencies":{
 		"mocha": "2.2.4",
 		"requirejs": "2.2.0",
 		"yargs": "4.0.0",
-		"xlsx": ""
+		"xlsx": "0.8.0"
 	}
 }
