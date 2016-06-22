@@ -1,4 +1,9 @@
 {
+	"name": "nhsntool",
+	"version": "1.0.0",
+	"bin": {
+		"nhsntool": "./main.js"
+	},
 	"dependencies":{
 		"mocha": "2.2.4",
 		"requirejs": "2.2.0",
