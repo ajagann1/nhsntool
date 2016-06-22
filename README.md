@@ -1,6 +1,6 @@
 # Dependencies
 
-* Nodejs v0.12.7
+* Nodejs v0.12.7 https://nodejs.org/en/blog/release/v0.12.7/ (Select the downloader appropriate for your operating system)
 
 # Installation
 
@@ -13,28 +13,41 @@ npm install
 * Mocha
 * requirejs
 * yargs
+* xlsx
 
 # Use
 
 ## Default use
 
-node main.js -c "{filepath1}/deltaConcepts.txt" -d "{filepath2}/deltaDescriptions.txt" -r "{filepath3}/deltaRelationships.txt"
-* Outputs a results.txt file into the main directory of the repository
+node main.js -c "{filepath1}/deltaConcepts.txt" -d "{filepath2}/deltaDescriptions.txt" -r "{filepath3}/deltaRelationships.txt" -x "{filepath4}/excel.xlsx"
+* Outputs a results.html file into the main directory of the repository
+
+## Setting up for global use
+
+npm install -g
+nhsntool -c "{filepath1}/deltaConcepts.txt" -d "{filepath2}/deltaDescriptions.txt" -r "{filepath3}/deltaRelationships.txt" -x "{filepath4}/excel.xlsx"
+* Outputs a results.html file into the directory the tool is used from
 
 
 ## Optional Flags
 
-* h - indicate if the delta files do not have a header depicting what each column represents with y/n (case does not matter)
-	* ex: -h n
+* ci - specify the column where concept codes are found in the concepts delta document.
+	* ex: --ci 1
 
-* i - specify the columns where concept codes are found in each document. If h is set (y), this is required.  This should be 4 integer numbers seperated by only commas.
-	* ex: -i "1,2,3,4"
-	
+* di - specify the column where concept codes are found in the descriptions delta document.
+	* ex: --di 5
+
+* ri - specify the column where concept codes are found in the relationships delta document.
+	* ex: --ri 5,6
+
+* xi - specify the column where concept codes are found in the excel spreadsheet.
+	* ex: --xi AA
+
 * l - indicate what's being used for spacing in the delta files (currently only supports ' ' for space and t for tab)
 	* ex: -l ' '
 
-* o - specify an output path for the results.txt file
-	* ex: -o "{filepath}/results.txt"
+* o - specify an output path for the results.html file
+	* ex: -o "{filepath}/results.html"
 
 * fo - force the scripts to create the folder specified in o if the path doesn't currently exist. Used in conjunction with -o.
 	* ex: --fo
