@@ -7,6 +7,8 @@
 var argv = require('yargs')
   .demand('c')
   .demand('d')
+  .demand('fd')
+  .demand('l')
   .demand('r')
   .demand('x')
   .argv;
@@ -23,13 +25,16 @@ var main = function() {
     //Made this happen synchronously so that we populate these variables immediately
     console.log("Parsing files.");
 
-    var indices = deltas.parseIndices(concepts, descript, relation, argv.ci, argv.di, argv.ri, argv.xi);
-    
-    var file = xlsx.readFile(argv.x);
-    var excel = deltas.excelArray(file, indices.xi);
+
+
+    var excel = deltas.excelArray(xlsx.readFile(argv.x), indices.xi);
     var concepts = deltas.parseFile(fs.readFileSync(argv.c, 'utf-8'), delimiter);
     var descript = deltas.parseFile(fs.readFileSync(argv.d, 'utf-8'), delimiter);
+    var descriptFull = deltas.parseFile(fs.readFileSync(argv.fd, 'utf-8'), delimiter);
+    var language = deltas.parseFile(fs.readFileSync(argv.l, 'utf-8'), delimiter);
     var relation = deltas.parseFile(fs.readFileSync(argv.r, 'utf-8'), delimiter);
+
+    var indices = deltas.parseIndices(concepts, descript, relation, language, argv.ci, argv.di, argv.ri, argv.xi, argv.li);
 
   } catch (err) {
 
@@ -66,18 +71,28 @@ var main = function() {
   var str = '';
   var spacer = '--------------------------------------';
   str += spacer;
+  var excelOut = [[],[],[]];
   console.log("Generating output.");
   for(var i in excel){
     if(i === "0") {
       excelHeader = excel[i];
+      excelOut[0].push(['Concept Code'].concat(concepts[0].delimited));
+      excelOut[1].push(['Concept Code'].concat(descript[0].delimited));
+      excelOut[2].push(['Concept Code'].concat(descriptFull[0].delimited));
+      excelOut[3].push(['Concept Code'].concat(relation[0].delimited));
       continue;
     }
     if(conceptCodeArray.indexOf(excel[i]) === -1){
       conceptCodeArray.push(excel[i]);
-      var output = deltas.generateOutput(excel[i], concepts, descript, relation, indices);
-      if(output.html && output.str){
+      var output = deltas.generateOutput(excel[i], concepts, descript, relation, language, indices);
+      if(output.html && output.str && output.excel){
         html += '<div data-role="collapsible"><h4>' + excel[i] + '</h4>' + output.html + '</div>';
         str += "\n\nConcept Code: " + excel[i] + output.str + '\n' + spacer;
+        for(var j in output.excel){
+          for(var k in output.excel[j]){
+            excelOut[j].push(output.excel[j][k]);
+          }
+        }
       }
     }
   }
@@ -87,12 +102,14 @@ var main = function() {
   try {
     var use = '';
     var force = argv.fo ? true : false;
-    var outputLoc = argv.o || argv.t ? deltas.parseOutputLoc(argv.o, force, argv.t) : 'results.txt';
+    var outputLoc = argv.o || argv.t ? deltas.parseOutputLoc(argv.o, force, argv.t) : 'results.xlsx';
     if(argv.t){
       if(argv.t === 'html') use = html;
       else if(argv.t === 'txt') use = str;
-    }else use = str;
-    fs.writeFileSync(outputLoc, use);
+      else if(argv.t === 'xlsx') use = excelOut;
+    }else use = excelOut;
+    if(use === excelOut) deltas.createExcel(outputLoc, ['Concepts', 'Descriptions', 'Relationships'], excelOut);
+    else fs.writeFileSync(outputLoc, use);
     console.log('File successfully generated.');
   } catch (err) {
     console.log(err);

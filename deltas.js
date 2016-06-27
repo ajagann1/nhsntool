@@ -3,6 +3,7 @@
  */
 
 var fs = require('fs');
+var xlsx = require('xlsx');
 
 //Parse the data in each delta file so that all lines are read as an object with the elements being an array of terms
 //and a string that contains the original data of that line.  This object is pushed into an array with there being an
@@ -37,6 +38,7 @@ exports.parseFile = function (file, delimiter) {
 var searchConcept = function (conceptCode, concepts, ci){
   var html = '';
   var str = '';
+  var excel = [];
   for (var i in concepts) {
     //If the user indicates there's no header, parse the first line, else, don't.
     if (i === '0') {
@@ -57,12 +59,14 @@ var searchConcept = function (conceptCode, concepts, ci){
       }
       str += concepts[i].original + '\n';
       html += '</tr></tbody></table></div>';
+      excel.push([conceptCode].concat(concepts[i].delimited));
       break;
     }
   }
   return {
     str: str,
-    html: html
+    html: html,
+    excel: excel
   };
 };
 
@@ -72,6 +76,7 @@ var searchDescript = function (conceptCode, descript, di) {
   var str = '';
   var found = false;
   var descriptHeader = '';
+  var excel = [];
   for (var i in descript) {
     if (i === '0') {
       descriptHeader = descript[i];
@@ -95,6 +100,7 @@ var searchDescript = function (conceptCode, descript, di) {
       }
       str += descript[i].original + '\n';
       html += '</tr>';
+      excel.push([conceptCode].concat(descript[i].delimited));
     }
   }
   if(found){
@@ -102,7 +108,8 @@ var searchDescript = function (conceptCode, descript, di) {
   } 
   return{
     str: str,
-    html: html
+    html: html,
+    excel: excel
   };
 };
 
@@ -112,6 +119,7 @@ var searchRelation = function (conceptCode, relation, ri) {
   var str = '';
   var found = false;
   var relationHeader = '';
+  var excel = [];
   for (var i in relation) {
     if (i === '0') {
       relationHeader = relation[i];
@@ -135,6 +143,7 @@ var searchRelation = function (conceptCode, relation, ri) {
       }
       str += relation[i].original + '\n';
       html += '</tr>';
+      excel.push([conceptCode].concat(relation[i].delimited));
     }
   }
   if(found) {
@@ -142,7 +151,8 @@ var searchRelation = function (conceptCode, relation, ri) {
   }
   return {
     str: str,
-    html: html
+    html: html,
+    excel: excel
   };
 };
 
@@ -156,21 +166,30 @@ exports.parseDelimiter = function (delimit) {
   else throw 'Unsupported delimiter choice ' + delimit + '.';
 };
 
-exports.generateOutput = function (conceptCode, concepts, descript, relation, indices) {
+exports.generateOutput = function (conceptCode, concepts, descript, relation, language, indices) {
   var html = '';
   var str = '';
+  var excel = [[], [], []];
 
   var searchC = searchConcept(conceptCode, concepts, indices.ci);
   if (searchC.str && searchC.html) {
     html += searchC.html;
     str += searchC.str;
+    excel[0] = searchC.excel;
+    /*for(var i in searchC.excel){
+      excel[0].push(searchC.excel[i]);
+    }*/
   }
 
-  var searchD = searchDescript(conceptCode, descript, indices.di);
+  var searchD = searchDescript(conceptCode, descript, language, indices.di, indices.li);
   if (searchD.str && searchD.html) {
     html += searchD.html;
     if(!searchC.str) str += '\n';
     str += searchD.str;
+    excel[1] = searchD.excel;
+    /*for(var i in searchD.excel){
+      excel[1].push(searchD.excel[i]);
+    }*/
   }
 
   var searchR = searchRelation(conceptCode, relation, indices.ri);
@@ -178,11 +197,16 @@ exports.generateOutput = function (conceptCode, concepts, descript, relation, in
     html += searchR.html;
     if(!searchD.str) str += '\n';
     str += searchR.str;
+    excel[2] = searchR.excel;
+    /*for(var i in searchR.excel){
+      excel[2].push(searchR.excel[i]);
+    }*/
   }
 
   return {
     str: str,
-    html: html
+    html: html,
+    excel: excel
   };
 };
 
@@ -192,9 +216,10 @@ exports.parseOutputLoc = function (outputLoc, force, outputType) {
   if(outputType){
     if(outputType === 'txt') ext = 'txt';
     else if(outputType === 'html') ext = 'html';
+    else if(outputType === 'xlsx') ext = 'xlsx';
     else throw 'Unsupported extension type.';
   } else {
-    ext = 'txt';
+    ext = 'xlsx';
   }
   if(outputLoc) {
     try {
@@ -219,23 +244,24 @@ exports.parseOutputLoc = function (outputLoc, force, outputType) {
     }
   }else{
     if(outputType) outputLoc = 'results.' + ext;
-    else outputLoc = 'results.txt';
+    else outputLoc = 'results.xlsx';
   }
   return outputLoc;
 };
 
-exports.parseIndices = function (concepts, descript, relation, ci, di, ri, xi){
+exports.parseIndices = function (concepts, descript, relation, ci, di, ri, xi, li){
   //Generic test cases
-  if(ci && (ci - 1 > concepts[0].delimited.length - 1 || ci - 1 < 0)) throw "Concept index is not a valid index";
-  if(di && (di - 1 > descript[0].delimited.length - 1 || di - 1 < 0)) throw "Description index is not a valid index";
+  if(ci && (ci - 1 > concepts[0].delimited.length - 1 || ci - 1 < 0)) throw "Inputted concept index is not a valid index";
+  if(di && (di - 1 > descript[0].delimited.length - 1 || di - 1 < 0)) throw "Inputted description index is not a valid index";
   if(ri && (ri.indexOf(',') === -1 || ri.match(/,/g).length > 1)) throw "Incorrect input for relationship index. Not " +
   "splitting indices by comma or too many indices inputted.";
   if(ri){
     var riInd = ri.split(',');
-    if(riInd[0] - 1 > relation[0].delimited.length - 1 || riInd[0] - 1 < 0) throw "First relationship index is not a valid index";
-    if(riInd[1] - 1 > relation[0].delimited.length - 1 || riInd[1] - 1 < 0) throw "Second relationship index is not a valid index";
+    if(riInd[0] - 1 > relation[0].delimited.length - 1 || riInd[0] - 1 < 0) throw "Inputted first relationship index is not a valid index";
+    if(riInd[1] - 1 > relation[0].delimited.length - 1 || riInd[1] - 1 < 0) throw "Inputted second relationship index is not a valid index";
   }
   if(xi && (xi.match(/\d+/g).length > 0)) throw "Inputted excel index of column isn't a possible index.";
+  if(li && (li - 1 > language[0].delimited.length - 1 || li - 1 < 0)) throw "Inputted language index is not a valid index";
   
   return {
     ci: ci ? ci - 1 : 0,
@@ -247,7 +273,8 @@ exports.parseIndices = function (concepts, descript, relation, ci, di, ri, xi){
       first: 4,
       second: 5
     },
-    xi: xi ? xi.toUpperCase() : "AA"
+    xi: xi ? xi.toUpperCase() : "AA",
+    li: li ? li - 1 : 6
   };
 };
 
@@ -268,5 +295,54 @@ exports.excelArray = function(workbook, col) {
   result = excelConvert(workbook.Sheets[workbook.SheetNames[0]], col);
 
   return result;
+};
+
+function Workbook() {
+  if(!(this instanceof Workbook)) return new Workbook();
+  this.SheetNames = [];
+  this.Sheets = {};
+}
+
+//Taken shamelessly from term-query
+function sheet_from_array_of_arrays(data, opts) {
+  var ws = {};
+  var range = {s: {c:10000000, r:10000000}, e: {c:0, r:0 }};
+  for(var R = 0; R != data.length; ++R) {
+    for(var C = 0; C != data[R].length; ++C) {
+      if(range.s.r > R) range.s.r = R;
+      if(range.s.c > C) range.s.c = C;
+      if(range.e.r < R) range.e.r = R;
+      if(range.e.c < C) range.e.c = C;
+      var cell = {v: data[R][C] };
+      if(cell.v == null) continue;
+      var cell_ref = xlsx.utils.encode_cell({c:C,r:R});
+
+      if(typeof cell.v === 'number') cell.t = 'n';
+      else if(typeof cell.v === 'boolean') cell.t = 'b';
+      else if(cell.v instanceof Date) {
+        cell.t = 'n'; cell.z = xlsx.SSF._table[14];
+        cell.v = datenum(cell.v);
+      }
+      else cell.t = 's';
+
+      ws[cell_ref] = cell;
+    }
+  }
+  if(range.s.c < 10000000) ws['!ref'] = xlsx.utils.encode_range(range);
+  return ws;
+}
+
+//Taken shamelessly from term-query
+exports.createExcel = function (fileName, sheetNames, data) {
+  var wb = new Workbook();
+
+  /* add worksheet to workbook */
+  for(var i in sheetNames){
+    var sheetName = sheetNames[i];
+    wb.SheetNames.push(sheetName);
+    wb.Sheets[sheetName] = sheet_from_array_of_arrays(data[i]);
+  }
+
+  xlsx.writeFile(wb, fileName);
 };
 
