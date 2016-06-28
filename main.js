@@ -5,12 +5,25 @@
  */
 
 var argv = require('yargs')
-  .demand('c')
-  .demand('d')
+  .describe('delta', 'Indication of whether delta info should be outputted as well')
+  .describe('c', 'Concept Delta absolute filepath. Required if delta is set')
+  .describe('d', 'Description Delta absolute filepath. Required if delta is set')
   .demand('fd')
+  .describe('fd', 'Full Description absolute filepath')
   .demand('l')
-  .demand('r')
+  .describe('l', 'Refset Language absolute filepath')
+  .describe('r', 'Relationship Delta absolute filepath. Required if delta is set')
   .demand('x')
+  .describe('x', 'Custom Excel sheet absolute filepath')
+  .describe('dl', 'Delimiter (\\t || " ")')
+  .describe('ci', 'Custom indication of which column in the Concept Delta file is the concept code (ex: 4)')
+  .describe('di', 'Custom indication of which column in the Description files (full and delta) is the concept code (ex: 4)')
+  .describe('ri', 'Custom indication of which columns in the Relationship Delta file are the source and destination concept codes (ex: 4,5)')
+  .describe('xi', 'Custom indication of which column in the Excel sheet file is the concept code (ex: AA)')
+  .describe('li', 'Custom indication of which column in the Refset Language file is the Description ID and the acceptibility ID (ex: 4,5')
+  .describe('t', 'Type of file to output (txt | html | xlsx). xlsx is the default when the t flag isn\'t used')
+  .describe('o', 'Specify the output location of the results file with the absolute filepath')
+  .describe('fo', 'Force the program to make the filepath specified in o. Does nothing if o isn\t specified')
   .argv;
 var fs = require('fs');
 var deltas = require('./deltas');
@@ -20,80 +33,21 @@ var main = function() {
   //Handle all input arguments and parse the input files. Defaulting logic used for the optional flags header and
   //delimiter.
   try {
+    
     console.log("Checking indices/delimiter and parsing excel file.");
     var delimiter = argv.dl ? deltas.parseDelimiter(argv.dl) : '\t';
-
-    // var descriptFull = deltas.parseFile(fs.readFileSync(argv.fd, 'utf-8'), delimiter);
-    //var concepts = deltas.parseFile(fs.readFileSync(argv.c, 'utf-8'), delimiter);
-    //var descript = deltas.parseFile(fs.readFileSync(argv.d, 'utf-8'), delimiter);
-
-    //var relation = deltas.parseFile(fs.readFileSync(argv.r, 'utf-8'), delimiter);
-
     var indices = deltas.parseIndices(argv.ci, argv.di, argv.ri, argv.xi, argv.li);
-
     var excel = deltas.excelArray(xlsx.readFile(argv.x), indices.xi);
-
-
+    
   } catch (err) {
-
     console.log(err);
     return;
 
   }
 
-  /*var excelHeader = '';
-  var conceptCodeArray = [];
-  
-  var excelOut = [[],[],[],[]];*/
-
-  //if(language.length === 0) {
-    /*var descriptFullOutput = deltas.generateFullDescript(excel, descriptFull, indices.di);
-    descriptFull = [];*/
-    /*try {
-      language = deltas.parseFile(fs.readFileSync(argv.l, 'utf-8'), delimiter);
-    } catch(err){
-      console.log(err);
-    }
-  }*/
-
   console.log("Beginning output generation.");
-  /*for(var i in excel){
-    if(i === "0") {
-      excelHeader = excel[i];
-      excelOut[0].push(['Concept Code'].concat(concepts[0].delimited));
-      excelOut[1].push(['Concept Code'].concat(descript[0].delimited));
-      excelOut[3].push(['Concept Code'].concat(relation[0].delimited));
-      continue;
-    }
-    if(conceptCodeArray.indexOf(excel[i]) === -1){
-      conceptCodeArray.push(excel[i]);*/
-
-      var output = deltas.generateOutput(excel, argv.c, argv.d, argv.l, argv.fd, argv.r, indices, delimiter);
-  /*if(output.html && output.str && output.excel){
-        
-        var count = 0;
-        for(var j = 0; j < 4; j++){
-          if(j === 2){
-            for(var k in descriptFullOutput) {
-              if(descriptFullOutput[k][0] === excel[i]) {
-                for(var l in descriptFullOutput[k][1].excel) {
-                  excelOut[j].push(descriptFullOutput[k][1].excel[l]);
-                }
-                break;
-              }
-            }
-          } else {
-            for (var k in output.excel[count]) {
-              excelOut[j].push(output.excel[count][k]);
-            }
-            count += 1;
-          }
-        }
-      }
-    }
-  }*/
+  var output = deltas.generateOutput(excel, argv.delta, argv.c, argv.d, argv.l, argv.fd, argv.r, indices, delimiter);
   
-
   //Outputs the resulting delta text to a specified file
   try {
     var force = argv.fo ? true : false;
@@ -106,10 +60,20 @@ var main = function() {
         fs.writeFileSync(outputLoc, output.str);
       }
       else if(argv.t === 'xlsx'){
-        deltas.createExcel(outputLoc, ['Concepts', 'Descriptions', 'All Descriptions', 'Relationships'], output.excel);
+        if(argv.delta) {
+          deltas.createExcel(outputLoc, ['Concepts', 'Descriptions', 'Relationships', 'All Descriptions'], output.excel);
+        }else{
+          var singleExcel = [output.excel[3]];
+          deltas.createExcel(outputLoc, ['All Descriptions'], singleExcel)
+        }
       }
     }else{
-      deltas.createExcel(outputLoc, ['Concepts', 'Descriptions', 'All Descriptions', 'Relationships'], output.excel);
+      if(argv.delta) {
+        deltas.createExcel(outputLoc, ['Concepts', 'Descriptions', 'Relationships', 'All Descriptions'], output.excel);
+      }else{
+        singleExcel = [output.excel[3]];
+        deltas.createExcel(outputLoc, ['All Descriptions'], singleExcel)
+      }
     }
     console.log('File successfully generated.');
   } catch (err) {

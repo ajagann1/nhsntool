@@ -46,30 +46,25 @@ var parseFile = function (file, delimiter) {
   return array;
 };
 
-var parseLanguage = function(fileLoc, descript, delimiter, li){
+var parseLanguage = function(fileLoc, delimiter, li){
   var language = {};
-  var descriptId = '';
   var parsed = '';
-  // if(indices.li.first >= language[0].delimited.length || indices.li.second >= language[0].delimited.length) throw "Inputted language index out of bounds";
   var lineReader = new LineReader(fileLoc);
   var line;
   var found = false;
-  var indices = {};
+
+
   console.log("Parsing language file.");
   while (line = lineReader.next()) {
     parsed = line.toString('utf8').trim().split('\t');
-    indices[parsed[li.first]] = parsed[li.second];
     if(!found){
+      if(li.first >= parsed.length || li.second >= parsed.length) throw "Inputted language index out of bounds";
       language['header'] = parsed[li.second];
       found = true;
     }
+    language[parsed[li.first]] = parsed[li.second];
   }
   console.log("Finished parsing language file.");
-  for (var i in descript) {
-    if(i === '0') continue;
-    descriptId = descript[i].delimited[0];
-    language[descriptId] = indices[descriptId];
-  }
   return language;
 };
 
@@ -99,26 +94,10 @@ var parseFullDescript = function(fileLoc, delimit, di, excelCodes){
   return descript;
 };
 
-/*var findIndices = function(fullDescript, di){
-  var indices = {};
-  for(var i in fullDescript){
-    if(!indices.hasOwnProperty(fullDescript[i].delimited[di])){
-      indices[fullDescript[i].delimited[di]] = [i];
-    }else{
-      indices[fullDescript[i].delimited[di]] = indices[fullDescript[i].delimited[di]].concat(i);
-    }
-
-  }
-  return indices;
-};*/
-
-
-
 var generateConceptList = function (excelCodes, concepts, ci){
   var output = {};
   var conceptCodes = [];
   var conceptHeader = '';
-  var excelHeader = false;
   for (var h in excelCodes) {
     var excel = [];
     var str = '';
@@ -150,7 +129,7 @@ var generateConceptList = function (excelCodes, concepts, ci){
             html: html,
             excel: excel,
             header: conceptHeader
-          }
+          };
           break;
         }
       }
@@ -160,7 +139,7 @@ var generateConceptList = function (excelCodes, concepts, ci){
 };
 
 //Search the description delta file for the currently looked at concept code.
-var generateDescriptList = function (excelCodes, descript, language, di, li) {
+var generateDescriptList = function (excelCodes, descript, language, di, delimiter) {
   var descriptHeader = '';
   var excelLine = [];
   var conceptCodes = [];
@@ -183,10 +162,10 @@ var generateDescriptList = function (excelCodes, descript, language, di, li) {
             html += '<div data-role="collapsible"><h4>Descriptions Delta</h4>';
             html += '<table><tbody><tr>';
             for (var j in descriptHeader.delimited) {
-              html += '<th>' + descriptHeader.delimited[j] + language['header'] + '</th>';
+              html += '<th>' + descriptHeader.delimited[j] + 'acceptabilityId' + '</th>';
             }
             str += '\nDescription:\n';
-            str += descriptHeader.original + '\t' + language['header'] + '\n';
+            str += descriptHeader.original + delimiter + 'acceptabilityId' + '\n';
             html += '</tr>';
             found = true;
           }
@@ -212,7 +191,6 @@ var generateDescriptList = function (excelCodes, descript, language, di, li) {
           html: html,
           excel: excel,
           header: descriptHeader,
-          langHeader: language['header']
         };
       }
     }
@@ -221,13 +199,12 @@ var generateDescriptList = function (excelCodes, descript, language, di, li) {
 };
 
 //Search the description delta file for the currently looked at concept code.
-var generateFullDescriptList = function (excelCodes, fullDescript, di) {
+var generateFullDescriptList = function (excelCodes, fullDescript, language, di, delimiter) {
   var descriptHeader = '';
   var conceptCodes = [];
   var excelLine = [];
   var descriptID = '';
   var output = {};
-  // var indices = findIndices(fullDescript, di);
   for(var h in excelCodes) {
     var html = '';
     var str = '';
@@ -242,10 +219,10 @@ var generateFullDescriptList = function (excelCodes, fullDescript, di) {
             html += '<div data-role="collapsible"><h4>Descriptions Delta</h4>';
             html += '<table><tbody><tr>';
             for (var j in descriptHeader.delimited) {
-              html += '<th>' + descriptHeader.delimited[j] + '</th>';
+              html += '<th>' + descriptHeader.delimited[j] + 'acceptabilityId</th>';
             }
             str += '\nAll Descriptions:\n';
-            str += descriptHeader.original + '\n';
+            str += descriptHeader.original + delimiter + 'acceptabilityId' + '\n';
             html += '</tr>';
             found = true;
           }
@@ -254,8 +231,9 @@ var generateFullDescriptList = function (excelCodes, fullDescript, di) {
           for (var j in fullDescript[i].delimited) {
             html += '<td>' + fullDescript[i].delimited[j] + '</td>';
           }
-          str += fullDescript[i].original + '\n';
-          excelLine = [excelCodes[h]].concat(fullDescript[i].delimited);
+          html += '<td>' + language[descriptID] + '</td>';
+          str += fullDescript[i].original + delimiter + language[descriptID] + '\n';
+          excelLine = [excelCodes[h]].concat(fullDescript[i].delimited).concat(language[descriptID]);
           html += '</tr>';
           excel.push(excelLine);
         }
@@ -326,7 +304,7 @@ var generateRelationList = function (excelCodes, relation, ri) {
   return output;
 };
 
-exports.generateOutput = function (excelCodes, conceptLoc, descriptLoc, languageLoc, fullDescriptLoc, relationLoc,
+exports.generateOutput = function (excelCodes, delta, conceptLoc, descriptLoc, languageLoc, fullDescriptLoc, relationLoc,
                                    indices, delimiter) {
   var html =
     '<html>' +
@@ -356,60 +334,43 @@ exports.generateOutput = function (excelCodes, conceptLoc, descriptLoc, language
   str += spacer;
   var excel = [[], [], [], []];
 
-  
-  var concepts = parseFile(fs.readFileSync(conceptLoc, 'utf-8'), delimiter);
-  excel[0].push(['Concept Code'].concat(concepts[0].delimited));
-  if(indices.ci >= concepts[0].delimited.length) throw "Inputted concept index out of bounds";
-  var conceptObj = generateConceptList(excelCodes, concepts, indices.ci);
-  concepts = null;
+  if(delta && (!conceptLoc || !descriptLoc || !relationLoc)){
+    throw 'If delta is flagged, all three locations of the delta files must be included';
+  }
+  if(delta) {
+    var concepts = parseFile(fs.readFileSync(conceptLoc, 'utf-8'), delimiter);
+    excel[0].push(['Concept Code'].concat(concepts[0].delimited));
+    if (indices.ci >= concepts[0].delimited.length) throw "Inputted concept index out of bounds";
+    var conceptObj = generateConceptList(excelCodes, concepts, indices.ci);
+    concepts = null;
+  }
 
-  /*if (searchC.str && searchC.html && searchC.excel) {
-    html += searchC.html;
-    str += searchC.str;
-    excel[0] = searchC.excel;
-    /!*for(var i in searchC.excel){
-      excel[0].push(searchC.excel[i]);
-    }*!/
-  }*/
+  var language = parseLanguage(languageLoc, delimiter, indices.li);
 
-  var descript = parseFile(fs.readFileSync(descriptLoc, 'utf-8'), delimiter);
-  var language = parseLanguage(languageLoc, descript, delimiter, indices.li);
-  excel[1].push(['Concept Code'].concat(descript[0].delimited).concat(['accessibilityId']));
-  excel[2].push(['Concept Code'].concat(descript[0].delimited));
-  if(indices.di >= descript[0].delimited.length) throw "Inputted description index out of bounds";
-  var descriptObj = generateDescriptList(excelCodes, descript, language, indices.di, indices.li);
-  descript = null;
-  language = null;
+  if(delta) {
+    var descript = parseFile(fs.readFileSync(descriptLoc, 'utf-8'), delimiter);
+    excel[1].push(['Concept Code'].concat(descript[0].delimited).concat(language['header']));
 
-  /*if (searchD.str && searchD.html && searchD.excel) {
-    html += searchD.html;
-    if(!searchC.str) str += '\n';
-    str += searchD.str;
-    excel[1] = searchD.excel;
-  }*/
+    if (indices.di >= descript[0].delimited.length) throw "Inputted description index out of bounds";
+    var descriptObj = generateDescriptList(excelCodes, descript, language, indices.di, delimiter);
+    descript = null;
+  }
+
+  if(delta) {
+    var relation = parseFile(fs.readFileSync(relationLoc, 'utf-8'), delimiter);
+    excel[2].push(['Concept Code'].concat(relation[0].delimited));
+    if (indices.ri.first >= relation[0].delimited.length || indices.ri.second >= relation[0].delimited.length) throw "Inputted relationship index out of bounds";
+    var relationObj = generateRelationList(excelCodes, relation, indices.ri);
+    relation = null;
+  }
 
   //Making the assumption that the full description file has the same format as the delta file, always.
   var fullDescript = parseFullDescript(fullDescriptLoc, delimiter, indices.di, excelCodes);
-  var fullDescriptObj = generateFullDescriptList(excelCodes, fullDescript, indices.di);
+  var fullDescriptObj = generateFullDescriptList(excelCodes, fullDescript, language, indices.di, delimiter);
+  excel[3].push(['Concept Code'].concat(fullDescript[0].delimited).concat(language['header']));
   fullDescript = null;
+  language = null;
 
-  
-  var relation = parseFile(fs.readFileSync(relationLoc, 'utf-8'), delimiter);
-  excel[3].push(['Concept Code'].concat(relation[0].delimited));
-  if(indices.ri.first >= relation[0].delimited.length || indices.ri.second >= relation[0].delimited.length) throw "Inputted relationship index out of bounds";
-  var relationObj = generateRelationList(excelCodes, relation, indices.ri);
-  relation = null;
-
-
-  /*if (searchR.str && searchR.html && searchR.excel) {
-    html += searchR.html;
-    if(!searchD.str) str += '\n';
-    str += searchR.str;
-    excel[2] = searchR.excel;
-    /!*for(var i in searchR.excel){
-      excel[2].push(searchR.excel[i]);
-    }*!/
-  }*/
 
 
   var conceptCodes = [];
@@ -419,51 +380,51 @@ exports.generateOutput = function (excelCodes, conceptLoc, descriptLoc, language
     if(i === '0') continue;
     if(conceptCodes.indexOf(excelCodes[i]) === -1) {
       conceptCodes.push(excelCodes[i]);
-      if (conceptObj.hasOwnProperty(excelCodes[i]) || descriptObj.hasOwnProperty(excelCodes[i]) ||
-        fullDescriptObj.hasOwnProperty(excelCodes[i]) || relationObj.hasOwnProperty(excelCodes[i])) {
-
+      if(conceptObj || descriptObj || relationObj || fullDescriptObj) {
         html += '<div data-role="collapsible"><h4>' + excelCodes[i] + '</h4>';
         str += "\n\nConcept Code: " + excelCodes[i];
+        if ((conceptObj && descriptObj && relationObj) &&
+          (conceptObj.hasOwnProperty(excelCodes[i]) || descriptObj.hasOwnProperty(excelCodes[i]) ||
+          relationObj.hasOwnProperty(excelCodes[i]))) {
 
-
-        if (conceptObj.hasOwnProperty(excelCodes[i])) {
-          obj = conceptObj[excelCodes[i]];
-          html += obj.html;
-          str += obj.str;
-          excel[0].push(obj.excel);
-        }
-
-        if (descriptObj.hasOwnProperty(excelCodes[i])) {
-          obj = descriptObj[excelCodes[i]];
-          html += obj.html;
-          if (!conceptObj.hasOwnProperty(excelCodes[i])) str += '\n';
-          str += obj.str;
-          for(var j in obj.excel) {
-            excel[1].push(obj.excel[j]);
+          if (conceptObj.hasOwnProperty(excelCodes[i])) {
+            obj = conceptObj[excelCodes[i]];
+            html += obj.html;
+            str += obj.str;
+            excel[0].push(obj.excel);
           }
-        }
 
-        if (fullDescriptObj.hasOwnProperty(excelCodes[i])) {
+          if (descriptObj.hasOwnProperty(excelCodes[i])) {
+            obj = descriptObj[excelCodes[i]];
+            html += obj.html;
+            if (!conceptObj.hasOwnProperty(excelCodes[i])) str += '\n';
+            str += obj.str;
+            for (var j in obj.excel) {
+              excel[1].push(obj.excel[j]);
+            }
+          }
+
+          if (relationObj.hasOwnProperty(excelCodes[i])) {
+            obj = relationObj[excelCodes[i]];
+            html += obj.html;
+            if (!descriptObj.hasOwnProperty(excelCodes[i]) && !conceptObj.hasOwnProperty(excelCodes[i])) str += '\n';
+            str += obj.str;
+            for (var j in obj.excel) {
+              excel[2].push(obj.excel[j]);
+            }
+          }
+          
+        }
+        if (fullDescriptObj && fullDescriptObj.hasOwnProperty(excelCodes[i])) {
           obj = fullDescriptObj[excelCodes[i]];
           html += obj.html;
-          if (!descriptObj.hasOwnProperty(excelCodes[i]) && !conceptObj.hasOwnProperty(excelCodes[i])) str += '\n';
+          if ((delta && !relationObj.hasOwnProperty(excelCodes[i]) && !descriptObj.hasOwnProperty(excelCodes[i])
+            && !conceptObj.hasOwnProperty(excelCodes[i])) || !delta) str += '\n';
           str += obj.str;
-          for(var j in obj.excel) {
-            excel[2].push(obj.excel[j]);
-          }
-        }
-
-        if (relationObj.hasOwnProperty(excelCodes[i])) {
-          obj = relationObj[excelCodes[i]];
-          html += obj.html;
-          if (!fullDescriptObj.hasOwnProperty(excelCodes[i]) && !descriptObj.hasOwnProperty(excelCodes[i])
-            && !conceptObj.hasOwnProperty(excelCodes[i])) str += '\n';
-          str += obj.str;
-          for(var j in obj.excel) {
+          for (var j in obj.excel) {
             excel[3].push(obj.excel[j]);
           }
         }
-
         html += '</div>';
         str += '\n' + spacer;
       }
