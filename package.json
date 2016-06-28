@@ -1,6 +1,6 @@
 {
   "name": "nhsntool",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "bin": {
     "nhsntool": "./main.js"
   },
@@ -9,7 +9,8 @@
     "mocha": "2.2.4",
     "requirejs": "2.2.0",
     "yargs": "4.0.0",
-    "xlsx": "0.8.0"
+    "xlsx": "0.8.0",
+    "n-readlines": "0.2.5"
   },
   "devDependencies": {
     "grunt": "^0.4.0",
