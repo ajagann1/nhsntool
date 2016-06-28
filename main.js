@@ -56,7 +56,7 @@ var main = function() {
     }
   }*/
 
-  console.log("Generating output.");
+  console.log("Beginning output generation.");
   /*for(var i in excel){
     if(i === "0") {
       excelHeader = excel[i];
