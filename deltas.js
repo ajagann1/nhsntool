@@ -483,15 +483,15 @@ exports.parseIndices = function (ci, di, ri, xi, li){
   //Generic test cases
   if(ci && ci - 1 < 0) throw "Inputted concept index is not a valid index";
   if(di && di - 1 < 0) throw "Inputted description index is not a valid index";
-  if(ri && ri.match(/,/g).length > 1) throw "Incorrect input for relationship index. Not " +
+  if(ri && (ri.match(/,/g) && ri.match(/,/g).length > 1)) throw "Incorrect input for relationship index. Not " +
   "splitting indices by comma or too many indices inputted.";
   if(ri){
     var riInd = ri.split(',');
     if(riInd[0] - 1 < 0) throw "Inputted first relationship index is not a valid index";
     if(riInd[1] - 1 < 0) throw "Inputted second relationship index is not a valid index";
   }
-  if(xi && (xi.match(/\d+/g).length > 0)) throw "Inputted excel index of column isn't a possible index.";
-  if(li && (li.indexOf(',') === -1 || li.match(/,/g).length > 1)) throw "Incorrect input for language index. Not " +
+  if(xi && (xi.match(/\d+/g))) throw "Inputted excel index of column isn't a possible index.";
+  if(li && (li.indexOf(',') === -1 || (li.match(/,/g) && li.match(/,/g).length > 1))) throw "Incorrect input for language index. Not " +
   "splitting indices by comma or too many indices inputted.";
   if(li){
     var liInd = li.split(',');
