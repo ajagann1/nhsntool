@@ -48,7 +48,7 @@ nhsntool -x "{filepath4}\Excel.xlsx" --fd "{filepath5}\Description_Full.txt" -l 
 * r - Specify the filepath to the Relationship Delta file (only necessary with delta flag thrown)
     * ex: -r "{filepath3}\Relationship.txt"
 
-* dl - Specify the delimiter used in the documents.  Only supports tab or space right now (t || " ")
+* dl - Specify the delimiter used in the documents.  Only supports tab or space right now (t | " ")
 	* ex: --dl t
 
 * ci - Specify the column where concept codes are found in the Concepts Delta document.
