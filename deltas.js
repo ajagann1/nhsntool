@@ -438,7 +438,9 @@ exports.generateOutput = function (excelCodes, conceptLoc, descriptLoc, language
           html += obj.html;
           if (!conceptObj.hasOwnProperty(excelCodes[i])) str += '\n';
           str += obj.str;
-          excel[1].push(obj.excel);
+          for(var j in obj.excel) {
+            excel[1].push(obj.excel[j]);
+          }
         }
 
         if (fullDescriptObj.hasOwnProperty(excelCodes[i])) {
@@ -446,7 +448,9 @@ exports.generateOutput = function (excelCodes, conceptLoc, descriptLoc, language
           html += obj.html;
           if (!descriptObj.hasOwnProperty(excelCodes[i]) && !conceptObj.hasOwnProperty(excelCodes[i])) str += '\n';
           str += obj.str;
-          excel[2].push(obj.excel);
+          for(var j in obj.excel) {
+            excel[2].push(obj.excel[j]);
+          }
         }
 
         if (relationObj.hasOwnProperty(excelCodes[i])) {
@@ -455,7 +459,9 @@ exports.generateOutput = function (excelCodes, conceptLoc, descriptLoc, language
           if (!fullDescriptObj.hasOwnProperty(excelCodes[i]) && !descriptObj.hasOwnProperty(excelCodes[i])
             && !conceptObj.hasOwnProperty(excelCodes[i])) str += '\n';
           str += obj.str;
-          excel[3].push(obj.excel);
+          for(var j in obj.excel) {
+            excel[3].push(obj.excel[j]);
+          }
         }
 
         html += '</div>';
