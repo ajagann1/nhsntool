@@ -21,8 +21,8 @@ npm install
 
 ## Default use
 
-node main.js -c "{filepath1}\Concept.txt" -d "{filepath2}\Description.txt" -r "{filepath3}\Relationship.txt" -x "{filepath4}\Excel.xlsx" --fd "{filepath5}\Description_Full.txt" -l "{filepath6}\Refset_Language.txt"
-* Outputs a results.xlsx file into the main directory of the repository
+Example: node main.js --full -x "{filepath1}\Excel.xlsx" --fd "{filepath5}\Description_Full.txt" -l "{filepath6}\Refset_Language.txt"
+* Used in the main directory of the repository. Outputs a results.xlsx file directly into the current directory.
 
 ## Setting up for global use
 
@@ -30,23 +30,44 @@ npm install -g
 
 ## Using globally
 
-nhsntool -x "{filepath4}\Excel.xlsx" --fd "{filepath5}\Description_Full.txt" -l "{filepath6}\Refset_Language.txt"
-* Outputs a results.xlsx file into the directory the tool is used from
+Example: nhsntool --full -x "{filepath1}\Excel.xlsx" --fd "{filepath5}\Description_Full.txt" -l "{filepath6}\Refset_Language.txt"
+* Outputs a results.xlsx file into the directory the tool is used from. Can be used anywhere.
 
+## Required Flag
+
+* x - Specify the filepath to the Excel file
+    * ex: -x {filepath1}\Excel.xlsx
+
+## Semi-Optional Flags (ONE must be used)
+
+* delta - Indicate whether you're using delta documents.  (c and d are required if this flag is used)
+	* ex: --delta
+
+* rel - Indicate that you're using the relationship delta document (r is required if this flag is used)
+    * ex: --rel
+
+* full - Indicate whether you're using the full description file (fd and l are required if this flag is used)
+    * ex: --full
+
+* all - Indicate that you're using all the usable document types (combines the previous 3 flags and has all of their requirements)
+    * ex: --all
 
 ## Optional Flags
 
-* delta - Indicate whether you're using delta documents.  (c, d, and r are required if this flag is used)
-	* ex: --delta
+* c - Specify the filepath to the Concept Delta file (only necessary with delta or all flag thrown)
+    * ex: -c "{filepath2}\Concept.txt"
 
-* c - Specify the filepath to the Concept Delta file (only necessary with delta flag thrown)
-    * ex: -c "{filepath1}\Concept.txt"
+* d - Specify the filepath to the Description Delta file (only necessary with delta or all flag thrown)
+    * ex: -d "{filepath3}\Description.txt"
 
-* d - Specify the filepath to the Description Delta file (only necessary with delta flag thrown)
-    * ex: -d "{filepath2}\Description.txt"
+* r - Specify the filepath to the Relationship Delta file (only necessary with rel or all flag thrown)
+    * ex: -r "{filepath4}\Relationship.txt"
 
-* r - Specify the filepath to the Relationship Delta file (only necessary with delta flag thrown)
-    * ex: -r "{filepath3}\Relationship.txt"
+* fd - Specify the filepath to the Full Description file (only necessary with the full or all flag thrown)
+    * ex: --fd "{filepath5}\Full_Description.txt"
+
+* l - Specify the filepath to the Refset Language file (only necessary with the full or all flag thrown)
+    * ex: -l "{filepath6}\Refset_Language.txt"
 
 * dl - Specify the delimiter used in the documents.  Only supports tab or space right now (t | " ")
 	* ex: --dl t
