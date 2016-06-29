@@ -49,7 +49,7 @@ Example: nhsntool --full -x "{filepath1}\Excel.xlsx" --fd "{filepath5}\Descripti
 * full - Indicate whether you're using the full description file (fd and l are required if this flag is used)
     * ex: --full
 
-* all - Indicate that you're using all the usable document types (combines the previous 3 flags and has all of their requirements)
+* all - Indicate that you're using all the usable document types (combines the previous 3 flags and has all of their requirements). If all is set, none of the other 3 flags should be set.
     * ex: --all
 
 ## Optional Flags

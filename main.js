@@ -10,7 +10,7 @@ var argv = require('yargs')
   .describe('rel', 'Indication that relationship info should be outputted [delta, rel, full, or all flag is required to be set]')
   .describe('full', 'Indication that full description info should be outputted [delta, rel, full, or all flag is required to be set]')
   .describe('all', 'Indication that all info should be outputted (the concept, description, and relationship delta files and the full description file)' +
-    '[delta, rel, full, or all flag is required to be set]')
+    '[delta, rel, full, or all flag is required to be set]. If all is set, delta, rel, and full should not be set.')
   .describe('c', 'Concept Delta absolute filepath. Required if delta is set')
   .describe('d', 'Description Delta absolute filepath. Required if delta is set')
   .describe('fd', 'Full Description absolute filepath. Required if full is set')
