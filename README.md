@@ -38,7 +38,7 @@ Example: nhsntool --full -x "{filepath1}\Excel.xlsx" --fd "{filepath5}\Descripti
 * x - Specify the filepath to the Excel file
     * ex: -x {filepath1}\Excel.xlsx
 
-## Semi-Optional Flags (ONE must be used)
+## Semi-Optional Flags (one MUST be used, multiple can be used except in the case of the all flag)
 
 * delta - Indicate whether you're using delta documents.  (c and d are required if this flag is used)
 	* ex: --delta
